@@ -839,9 +839,9 @@ HttpSM::state_watch_for_client_abort(int event, void *data)
    * client.
    */
   case VC_EVENT_EOS: {
-    // We got an early EOS.
+    // We got an early EOS. If the tunnal has cache writer, don't kill it for background fill.
     NetVConnection *netvc = ua_txn->get_netvc();
-    if (ua_txn->allow_half_open()) {
+    if (ua_txn->allow_half_open() || tunnel.has_consumer_besides_client()) {
       if (netvc) {
         netvc->do_io_shutdown(IO_SHUTDOWN_READ);
       }
@@ -2879,7 +2879,13 @@ HttpSM::tunnel_handler_server(int event, HttpTunnelProducer *p)
 {
   STATE_ENTER(&HttpSM::tunnel_handler_server, event);
 
-  milestones[TS_MILESTONE_SERVER_CLOSE] = Thread::get_hrtime();
+  // An intercept handler may not set TS_MILESTONE_SERVER_CONNECT
+  // by default. Therefore we only set TS_MILESTONE_SERVER_CLOSE if
+  // TS_MILESTONE_SERVER_CONNECT is set (non-zero), lest certain time
+  // statistics are calculated from epoch time.
+  if (0 != milestones[TS_MILESTONE_SERVER_CONNECT]) {
+    milestones[TS_MILESTONE_SERVER_CLOSE] = Thread::get_hrtime();
+  }
 
   bool close_connection = false;
 
@@ -2941,7 +2947,7 @@ HttpSM::tunnel_handler_server(int event, HttpTunnelProducer *p)
       // the reason string being written to the client and a bad CL when reading from cache.
       // I didn't find anywhere this appended reason is being used, so commenting it out.
       /*
-        if (t_state.is_cacheable_and_negative_caching_is_enabled && p->bytes_read == 0) {
+        if (t_state.is_cacheable_due_to_negative_caching_configuration && p->bytes_read == 0) {
         int reason_len;
         const char *reason = t_state.hdr_info.server_response.reason_get(&reason_len);
         if (reason == NULL)
@@ -2996,8 +3002,8 @@ HttpSM::tunnel_handler_server(int event, HttpTunnelProducer *p)
   }
 
   // turn off negative caching in case there are multiple server contacts
-  if (t_state.is_cacheable_and_negative_caching_is_enabled) {
-    t_state.is_cacheable_and_negative_caching_is_enabled = false;
+  if (t_state.is_cacheable_due_to_negative_caching_configuration) {
+    t_state.is_cacheable_due_to_negative_caching_configuration = false;
   }
 
   // If we had a ground fill, check update our status
@@ -3395,6 +3401,10 @@ HttpSM::tunnel_handler_cache_write(int event, HttpTunnelConsumer *c)
     // All other events indicate problems
     ink_assert(0);
     break;
+  }
+
+  if (background_fill != BACKGROUND_FILL_NONE) {
+    server_response_body_bytes = c->bytes_written;
   }
 
   HTTP_DECREMENT_DYN_STAT(http_current_cache_connections_stat);
@@ -6579,7 +6589,7 @@ HttpSM::setup_server_transfer()
 
   nbytes = server_transfer_init(buf, hdr_size);
 
-  if (t_state.is_cacheable_and_negative_caching_is_enabled &&
+  if (t_state.is_cacheable_due_to_negative_caching_configuration &&
       t_state.hdr_info.server_response.status_get() == HTTP_STATUS_NO_CONTENT) {
     int s = sizeof("No Content") - 1;
     buf->write("No Content", s);
