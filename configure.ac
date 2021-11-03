@@ -32,8 +32,8 @@
 # Version number is calculated as MAJOR * 1000000 + MINOR * 1000 + MICRO
 # Version string is in the form of MAJOR.MINOR.MICRO[sufix]
 #
-m4_define([TS_VERSION_S],[8.1.2])
-m4_define([TS_VERSION_N],[8001002])
+m4_define([TS_VERSION_S],[8.1.3])
+m4_define([TS_VERSION_N],[8001003])
 
 AC_INIT([Apache Traffic Server], TS_VERSION_S(), [dev@trafficserver.apache.org], [trafficserver],[http://trafficserver.apache.org])
 AC_PREREQ([2.59])
@@ -1319,7 +1319,7 @@ TS_CHECK_BROTLI
 TS_CHECK_LUAJIT
 
 #
-# Enable experimental/uri_singing plugin
+# Enable experimental/uri_signing plugin
 # This is here, instead of above, because it needs to know if PCRE is available.
 #
 
