@@ -1,0 +1,130 @@
+diff --git a/proxy/hdrs/HdrToken.cc b/proxy/hdrs/HdrToken.cc
+index 55fe5200a..b29a3229d 100644
+--- a/proxy/hdrs/HdrToken.cc
++++ b/proxy/hdrs/HdrToken.cc
+@@ -110,7 +110,10 @@ static const char *_hdrtoken_strs[] = {
+   "X-ID", "X-Forwarded-For", "TE", "Strict-Transport-Security", "100-continue",
+ 
+   // RFC-2739
+-  "Forwarded"};
++  "Forwarded",
++
++  // Override hostname for outbound connection tracking
++  "@Ats-OutConnTrack"};
+ 
+ static HdrTokenTypeBinding _hdrtoken_strs_type_initializers[] = {
+   {"file", HDRTOKEN_TYPE_SCHEME},
+@@ -359,7 +362,10 @@ static const char *_hdrtoken_commonly_tokenized_strs[] = {
+   "X-ID", "X-Forwarded-For", "TE", "Strict-Transport-Security", "100-continue",
+ 
+   // RFC-2739
+-  "Forwarded"};
++  "Forwarded",
++
++  // Override hostname for outbound connection tracking
++  "@Ats-OutConnTrack"};
+ 
+ /*-------------------------------------------------------------------------
+   -------------------------------------------------------------------------*/
+diff --git a/proxy/hdrs/MIME.cc b/proxy/hdrs/MIME.cc
+index 35a1159b7..71e92a819 100644
+--- a/proxy/hdrs/MIME.cc
++++ b/proxy/hdrs/MIME.cc
+@@ -152,6 +152,7 @@ const char *MIME_FIELD_FORWARDED;
+ const char *MIME_FIELD_SEC_WEBSOCKET_KEY;
+ const char *MIME_FIELD_SEC_WEBSOCKET_VERSION;
+ const char *MIME_FIELD_HTTP2_SETTINGS;
++const char *MIME_FIELD_ATS_OUTCONNTRACK;
+ 
+ const char *MIME_VALUE_BYTES;
+ const char *MIME_VALUE_CHUNKED;
+@@ -268,6 +269,7 @@ int MIME_LEN_FORWARDED;
+ int MIME_LEN_SEC_WEBSOCKET_KEY;
+ int MIME_LEN_SEC_WEBSOCKET_VERSION;
+ int MIME_LEN_HTTP2_SETTINGS;
++int MIME_LEN_ATS_OUTCONNTRACK;
+ 
+ int MIME_WKSIDX_ACCEPT;
+ int MIME_WKSIDX_ACCEPT_CHARSET;
+@@ -347,6 +349,7 @@ int MIME_WKSIDX_FORWARDED;
+ int MIME_WKSIDX_SEC_WEBSOCKET_KEY;
+ int MIME_WKSIDX_SEC_WEBSOCKET_VERSION;
+ int MIME_WKSIDX_HTTP2_SETTINGS;
++int MIME_WKSIDX_ATS_OUTCONNTRACK;
+ 
+ /***********************************************************************
+  *                                                                     *
+@@ -737,6 +740,7 @@ mime_init()
+     MIME_FIELD_X_ID                      = hdrtoken_string_to_wks("X-ID");
+     MIME_FIELD_X_FORWARDED_FOR           = hdrtoken_string_to_wks("X-Forwarded-For");
+     MIME_FIELD_FORWARDED                 = hdrtoken_string_to_wks("Forwarded");
++    MIME_FIELD_ATS_OUTCONNTRACK          = hdrtoken_string_to_wks("@Ats-OutConnTrack");
+ 
+     MIME_FIELD_SEC_WEBSOCKET_KEY     = hdrtoken_string_to_wks("Sec-WebSocket-Key");
+     MIME_FIELD_SEC_WEBSOCKET_VERSION = hdrtoken_string_to_wks("Sec-WebSocket-Version");
+@@ -818,6 +822,7 @@ mime_init()
+     MIME_LEN_X_ID                      = hdrtoken_wks_to_length(MIME_FIELD_X_ID);
+     MIME_LEN_X_FORWARDED_FOR           = hdrtoken_wks_to_length(MIME_FIELD_X_FORWARDED_FOR);
+     MIME_LEN_FORWARDED                 = hdrtoken_wks_to_length(MIME_FIELD_FORWARDED);
++    MIME_LEN_ATS_OUTCONNTRACK          = hdrtoken_wks_to_length(MIME_FIELD_ATS_OUTCONNTRACK);
+ 
+     MIME_LEN_SEC_WEBSOCKET_KEY     = hdrtoken_wks_to_length(MIME_FIELD_SEC_WEBSOCKET_KEY);
+     MIME_LEN_SEC_WEBSOCKET_VERSION = hdrtoken_wks_to_length(MIME_FIELD_SEC_WEBSOCKET_VERSION);
+@@ -901,6 +906,7 @@ mime_init()
+     MIME_WKSIDX_SEC_WEBSOCKET_KEY         = hdrtoken_wks_to_index(MIME_FIELD_SEC_WEBSOCKET_KEY);
+     MIME_WKSIDX_SEC_WEBSOCKET_VERSION     = hdrtoken_wks_to_index(MIME_FIELD_SEC_WEBSOCKET_VERSION);
+     MIME_WKSIDX_HTTP2_SETTINGS            = hdrtoken_wks_to_index(MIME_FIELD_HTTP2_SETTINGS);
++    MIME_WKSIDX_ATS_OUTCONNTRACK          = hdrtoken_wks_to_index(MIME_FIELD_ATS_OUTCONNTRACK);
+ 
+     MIME_VALUE_BYTES                = hdrtoken_string_to_wks("bytes");
+     MIME_VALUE_CHUNKED              = hdrtoken_string_to_wks("chunked");
+diff --git a/proxy/hdrs/MIME.h b/proxy/hdrs/MIME.h
+index b0e9ac17b..fdb8c1981 100644
+--- a/proxy/hdrs/MIME.h
++++ b/proxy/hdrs/MIME.h
+@@ -389,6 +389,7 @@ extern const char *MIME_FIELD_FORWARDED;
+ extern const char *MIME_FIELD_SEC_WEBSOCKET_KEY;
+ extern const char *MIME_FIELD_SEC_WEBSOCKET_VERSION;
+ extern const char *MIME_FIELD_HTTP2_SETTINGS;
++extern const char *MIME_FIELD_ATS_OUTCONNTRACK;
+ 
+ extern const char *MIME_VALUE_BYTES;
+ extern const char *MIME_VALUE_CHUNKED;
+@@ -490,6 +491,7 @@ extern int MIME_LEN_ATS_INTERNAL;
+ extern int MIME_LEN_X_ID;
+ extern int MIME_LEN_X_FORWARDED_FOR;
+ extern int MIME_LEN_FORWARDED;
++extern int MIME_LEN_ATS_OUTCONNTRACK;
+ 
+ extern int MIME_LEN_BYTES;
+ extern int MIME_LEN_CHUNKED;
+@@ -595,6 +597,7 @@ extern int MIME_WKSIDX_X_ID;
+ extern int MIME_WKSIDX_SEC_WEBSOCKET_KEY;
+ extern int MIME_WKSIDX_SEC_WEBSOCKET_VERSION;
+ extern int MIME_WKSIDX_HTTP2_SETTINGS;
++extern int MIME_WKSIDX_ATS_OUTCONNTRACK;
+ 
+ /***********************************************************************
+  *                                                                     *
+diff --git a/proxy/http/HttpSM.cc b/proxy/http/HttpSM.cc
+index f22271487..c1b0627e2 100644
+--- a/proxy/http/HttpSM.cc
++++ b/proxy/http/HttpSM.cc
+@@ -4883,8 +4883,15 @@ HttpSM::do_http_server_open(bool raw)
+     ConnectionCount *connections = ConnectionCount::getInstance();
+ 
+     CryptoHash hostname_hash;
+-    CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
+-                                   static_cast<int>(strlen(t_state.current.server->name)));
++    int ats_outconntrack_len = 0;
++    const char *ats_outconntrack_val = t_state.hdr_info.client_request.value_get(
++      MIME_FIELD_ATS_OUTCONNTRACK, MIME_LEN_ATS_OUTCONNTRACK, &ats_outconntrack_len);
++    if (ats_outconntrack_val) {
++      CryptoContext().hash_immediate(hostname_hash, ats_outconntrack_val, ats_outconntrack_len);
++    } else {
++      CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
++                                     static_cast<int>(strlen(t_state.current.server->name)));
++    }
+ 
+     auto ccount = connections->getCount(t_state.current.server->dst_addr, hostname_hash,
+                                         (TSServerSessionSharingMatchType)t_state.txn_conf->server_session_sharing_match);
