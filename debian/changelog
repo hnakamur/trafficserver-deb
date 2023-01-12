@@ -1,3 +1,9 @@
+trafficserver (8.1.2-1ubuntu1ppa3~ubuntu18.04) bionic; urgency=medium
+
+  * Add debug log to debian/patches/override-out-conntrack.patch
+
+ -- Hiroaki Nakamura <hnakamur@gmail.com>  Thu, 12 Jan 2023 18:07:29 +0900
+
 trafficserver (8.1.2-1ubuntu1ppa2~ubuntu18.04) bionic; urgency=medium
 
   * Add debian/patches/override-out-conntrack.patch
