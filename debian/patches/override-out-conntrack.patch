@@ -107,24 +107,46 @@ index b0e9ac17b..fdb8c1981 100644
  /***********************************************************************
   *                                                                     *
 diff --git a/proxy/http/HttpSM.cc b/proxy/http/HttpSM.cc
-index f22271487..c1b0627e2 100644
+index f222714..14335d9 100644
 --- a/proxy/http/HttpSM.cc
 +++ b/proxy/http/HttpSM.cc
-@@ -4883,8 +4883,15 @@ HttpSM::do_http_server_open(bool raw)
+@@ -4883,8 +4883,17 @@ HttpSM::do_http_server_open(bool raw)
      ConnectionCount *connections = ConnectionCount::getInstance();
  
      CryptoHash hostname_hash;
 -    CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
 -                                   static_cast<int>(strlen(t_state.current.server->name)));
 +    int ats_outconntrack_len = 0;
-+    const char *ats_outconntrack_val = t_state.hdr_info.client_request.value_get(
-+      MIME_FIELD_ATS_OUTCONNTRACK, MIME_LEN_ATS_OUTCONNTRACK, &ats_outconntrack_len);
++    const char *ats_outconntrack_val =
++      t_state.hdr_info.client_request.value_get(MIME_FIELD_ATS_OUTCONNTRACK, MIME_LEN_ATS_OUTCONNTRACK, &ats_outconntrack_len);
 +    if (ats_outconntrack_val) {
-+      CryptoContext().hash_immediate(hostname_hash, ats_outconntrack_val, ats_outconntrack_len);
++      SMDebug("http", "@Ats-OutConnTrack=\"%.*s\"", ats_outconntrack_len, ats_outconntrack_val);
++      CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(ats_outconntrack_val), ats_outconntrack_len);
 +    } else {
++      SMDebug("http", "@Ats-OutConnTrack is not set");
 +      CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
 +                                     static_cast<int>(strlen(t_state.current.server->name)));
 +    }
  
      auto ccount = connections->getCount(t_state.current.server->dst_addr, hostname_hash,
                                          (TSServerSessionSharingMatchType)t_state.txn_conf->server_session_sharing_match);
+@@ -5370,8 +5379,17 @@ HttpSM::handle_http_server_open()
+   // if we were a queued request, we need to decrement the queue size-- as we got a connection
+   if (t_state.origin_request_queued) {
+     CryptoHash hostname_hash;
+-    CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
+-                                   strlen(t_state.current.server->name));
++    int ats_outconntrack_len = 0;
++    const char *ats_outconntrack_val =
++      t_state.hdr_info.client_request.value_get(MIME_FIELD_ATS_OUTCONNTRACK, MIME_LEN_ATS_OUTCONNTRACK, &ats_outconntrack_len);
++    if (ats_outconntrack_val) {
++      SMDebug("http", "@Ats-OutConnTrack=\"%.*s\"", ats_outconntrack_len, ats_outconntrack_val);
++      CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(ats_outconntrack_val), ats_outconntrack_len);
++    } else {
++      SMDebug("http", "@Ats-OutConnTrack is not set");
++      CryptoContext().hash_immediate(hostname_hash, static_cast<const void *>(t_state.current.server->name),
++                                     static_cast<int>(strlen(t_state.current.server->name)));
++    }
+ 
+     ConnectionCountQueue *waiting_connections = ConnectionCountQueue::getInstance();
+     waiting_connections->incrementCount(t_state.current.server->dst_addr, hostname_hash,
