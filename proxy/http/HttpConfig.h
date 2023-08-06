@@ -848,7 +848,7 @@ public:
   MgmtByte referer_filter_enabled  = 0;
   MgmtByte referer_format_redirect = 0;
 
-  MgmtByte strict_uri_parsing = 0;
+  MgmtByte strict_uri_parsing = 2;
 
   MgmtByte reverse_proxy_enabled = 0;
   MgmtByte url_remap_required    = 1;
@@ -874,6 +874,7 @@ public:
 
   MgmtInt body_factory_response_max_size = 8192;
 
+  MgmtByte scheme_proto_mismatch_policy = 2;
   // noncopyable
   /////////////////////////////////////
   // operator = and copy constructor //
