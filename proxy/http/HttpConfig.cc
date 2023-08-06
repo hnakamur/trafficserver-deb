@@ -1226,7 +1226,7 @@ HttpConfig::startup()
   HttpEstablishStaticConfigByte(c.redirection_host_no_port, "proxy.config.http.redirect_host_no_port");
   HttpEstablishStaticConfigLongLong(c.oride.number_of_redirections, "proxy.config.http.number_of_redirections");
   HttpEstablishStaticConfigLongLong(c.post_copy_size, "proxy.config.http.post_copy_size");
-
+  HttpEstablishStaticConfigByte(c.scheme_proto_mismatch_policy, "proxy.config.ssl.client.scheme_proto_mismatch_policy");
   http_config_cont->handleEvent(EVENT_NONE, nullptr);
 
   return;
@@ -1475,7 +1475,7 @@ HttpConfig::reconfigure()
   params->referer_filter_enabled  = INT_TO_BOOL(m_master.referer_filter_enabled);
   params->referer_format_redirect = INT_TO_BOOL(m_master.referer_format_redirect);
 
-  params->strict_uri_parsing = INT_TO_BOOL(m_master.strict_uri_parsing);
+  params->strict_uri_parsing = m_master.strict_uri_parsing;
 
   params->oride.down_server_timeout    = m_master.oride.down_server_timeout;
   params->oride.client_abort_threshold = m_master.oride.client_abort_threshold;
@@ -1491,6 +1491,8 @@ HttpConfig::reconfigure()
   params->post_copy_size                    = m_master.post_copy_size;
   params->oride.client_cert_filename        = ats_strdup(m_master.oride.client_cert_filename);
   params->oride.client_cert_filepath        = ats_strdup(m_master.oride.client_cert_filepath);
+
+  params->scheme_proto_mismatch_policy = m_master.scheme_proto_mismatch_policy;
 
   params->negative_caching_list = m_master.negative_caching_list;
 
