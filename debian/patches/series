@@ -5,7 +5,6 @@
 0011-fix-segfault.patch
 0012-fix-spelling-checks.patch
 0013-fix-perl-interpreter-path.patch
-0014-use_system_yaml-cpp.patch
 
 # custom patches
 Add-config-value-for-caching-only-when-Cache-Control.patch
