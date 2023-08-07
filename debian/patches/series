@@ -9,3 +9,6 @@
 # custom patches
 Add-config-value-for-caching-only-when-Cache-Control.patch
 Serve-a-stale-cache-even-if-s-maxage-is-specified.patch
+
+# https://github.com/apache/trafficserver/commit/a686eb73b1
+fix_traffic_top_format_not_string_literal.patch
